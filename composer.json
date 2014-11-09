@@ -1,0 +1,19 @@
+{
+    "name": "eyeopen/assignment",
+    "description": "Assignment for EyeOpen",
+    "version": "0.1.0",
+    "homepage": "http://www.eyeopen.nl",
+    "require": {
+        "php": "5.5.x"
+    },
+    "require-dev": {
+        "mockery/mockery": "0.9.2",
+        "phpunit/phpunit": "4.2.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "EyeOpen\\": "src"
+        }
+    },
+    "minimum-stability": "stable"
+}
