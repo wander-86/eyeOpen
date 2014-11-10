@@ -161,45 +161,32 @@ class CompositeDataTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Only accepts Arrayable implementations
-     *
-     * @expectedException PHPUnit_Framework_Error
-     * @test
-     */
-    public function shouldThrowErrorWhenNotPassedArrayableToSet()
-    {
-        $this->data->objectA = new \stdClass();
-    }
-
-    /**
      * Convert to non flat array when use set method
      *
      * @test
      */
     public function shouldConvertToNonFlatArray()
     {
-        // skip it
-        $this->data->getValueFromObject = new ArrayObject(
+        $this->data->addObject(new ArrayObject(
             array(
                 'value' => 'moo'
             )
-        );
-
-        $this->data->setObjectA(new ArrayObject(
-            array(
-                'value' => 'moo'
-            )
-        ));
-        $this->data->objectB = new ArrayObject(
+        ), 'objectA');
+        $this->data->addObject(new ArrayObject(
             array(
                 'something' => 'boo'
             )
-        );
-        $this->data->objectC = new ArrayObject(
+        ), 'objectB');
+        $this->data->addObject(new ArrayObject(
             array(
                 'value' => 'heythere'
             )
-        );
+        ), 'objectC');
+        $this->data->addObject(new ArrayObject(
+            array(
+                'value' => 'without object name'
+            )
+        ));
 
         $this->assertEquals(
             array(
@@ -211,8 +198,11 @@ class CompositeDataTest extends \PHPUnit_Framework_TestCase
                 ),
                 'objectC' => array(
                     'value' => 'heythere'
+                ),
+                0 => array(
+                    'value' => 'without object name'
                 )
-            ), $this->data->toArray()
+            ), $this->data->setReturnType(CompositeData::ARRAY_RETURN_TYPE_STRUCTURE)->toArray()
         );
 
     }

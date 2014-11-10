@@ -6,6 +6,11 @@ namespace EyeOpen;
  */
 class CompositeData implements Arrayable
 {
+    const ARRAY_RETURN_TYPE_FLAT = 'flat';
+    const ARRAY_RETURN_TYPE_STRUCTURE = 'structure';
+
+    private $arrayCurrentType = self::ARRAY_RETURN_TYPE_FLAT;
+
     /**
      * @var array
      */
@@ -29,10 +34,15 @@ class CompositeData implements Arrayable
      * Add object to the stack.
      *
      * @param Arrayable $object
+     * @param string $indexName
      */
-    public function addObject(Arrayable $object)
+    public function addObject(Arrayable $object, $indexName = '')
     {
-        $this->objects[] = $object;
+        if (empty($indexName)) {
+            $this->objects[] = $object;
+        } else {
+            $this->objects[$indexName] = $object;
+        }
     }
 
     /**
@@ -53,33 +63,6 @@ class CompositeData implements Arrayable
         }
 
         return null;
-    }
-
-    /**
-     * Call set methods and forward them to __set method.
-     *
-     * @param string $method
-     * @param array $args
-     */
-    public function __call($method, $args)
-    {
-        if(strpos($method, 'set') !== false) {
-            $name = lcfirst(substr($method, strlen('set')));
-            $this->__set($name, $args[0]);
-        }
-    }
-
-    /**
-     * Add object to the stack with object name.
-     *
-     * @param string $objectName
-     * @param Arrayable $object
-     */
-    public function __set($objectName, Arrayable $object)
-    {
-        if (!method_exists($this, $objectName) && !isset($this->$objectName)) {
-            $this->objects[$objectName] = $object;
-        }
     }
 
     protected function getValueFromObject($object, $name)
@@ -115,22 +98,40 @@ class CompositeData implements Arrayable
     }
 
     /**
+     * Set return type for toArray method
+     *
+     * @param string $arrayReturnType
+     * @return CompositeData
+     */
+    public function setReturnType($arrayReturnType = self::ARRAY_RETURN_TYPE_FLAT)
+    {
+        $this->arrayCurrentType = $arrayReturnType;
+
+        return $this;
+    }
+
+    /**
      * @inheritdoc
      */
     public function toArray()
     {
         $return = array();
         foreach($this->objects as $objectName => $object) {
-            if (is_string($objectName) && !isset($return[$objectName])) {
-                foreach (array_keys($object->toArray()) as $key) {
-                    $return[$objectName][$key] = $this->getValueFromObject($object, $key);
-                }
-            } else {
-                foreach (array_keys($object->toArray()) as $key) {
-                    if (!isset($return[$key])) {
-                        $return[$key] = $this->getValueFromObject($object, $key);
+            switch ($this->arrayCurrentType) {
+                case self::ARRAY_RETURN_TYPE_STRUCTURE:
+                    foreach (array_keys($object->toArray()) as $key) {
+                        $return[$objectName][$key] = $this->getValueFromObject($object, $key);
+                    };
+                    break;
+                case self::ARRAY_RETURN_TYPE_FLAT:
+                    foreach (array_keys($object->toArray()) as $key) {
+                        if (!isset($return[$key])) {
+                            $return[$key] = $this->getValueFromObject($object, $key);
+                        }
                     }
-                }
+                    break;
+                default:
+                    break;
             }
         }
 
